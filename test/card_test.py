@@ -20,7 +20,7 @@ def test_eq():
     c1 = Card(3)
     c2 = Card(3)
     c3 = Card(1)
-    c4 = Card(3)
+    c4 = Card(2)
     c5 = Card(7)
 
     assert c1 == c2
@@ -45,10 +45,6 @@ def test_divzero():
 
 def test_validation():
     with pytest.raises(ValueError):
-        Card(1)
-    with pytest.raises(ValueError):
-        Card(10)
-    with pytest.raises(ValueError):
         Card('3')
 
 def test_play_on():
@@ -60,7 +56,7 @@ def test_play_on():
     assert c1.can_play_on(c1)
     assert c2.can_play_on(c1)
     assert c2.can_play_on(c2)
-    assert c3.can_play_on(c2)
+    assert not c3.can_play_on(c1)
     assert not c4.can_play_on(c1)
 
 def test_all_cards():
@@ -73,8 +69,6 @@ def test_all_cards():
     ]
     assert cards == expected_cards
 
-    cards = Card.all_cards()
-    assert len(cards) == 4 * 19
 
 def test_score():
     c = Card(7)

@@ -1,39 +1,49 @@
-"""Карты Lama."""
+"""Карты Lama"""
+from typing import Self
 
-from typing_extensions import Self
 
 
 class Card:
-    numbers = list(range(8)) + list(range(1, 8))
-    def __init__(str, number: int):
-        if number not in Card.numbers:
+    NUMBERS = list(range(10)) + list(range(1, 10))
+
+    def __init__(self, number: int):
+        if number not in Card.NUMBERS:
             raise ValueError
-        Self.number = number
+        self.number = number
+
+    def __repr__(self):
+        # '3'
+        return f'{self.number}'
 
     def __eq__(self, other):
+        if isinstance(other, str):
+            other = Card.load(other)
         return self.number == other.number
 
     def save(self):
         return repr(self)
 
+
     @staticmethod
     def load(text: str):
-        """From 'y3' to Card('y', 3)."""
-        return Card(number=int(text[1]))
+        """From '3' to Card(3)."""
+        return Card(number=int(text[0]))
 
     def can_play_on(self, other: Self) -> bool:
         """Можно ли играть карту self на карту other."""
-        return self.number == other.number
+        return self.number == other.number or self.number == other.number+1
 
     @staticmethod
     def all_cards(numbers: None | list[int] = None):
         if numbers is None:
-            numbers = Card.numbers
-        cards = [(number == num) for num in numbers]
+            numbers = Card.NUMBERS
+        # cards = []
+        # for col in colors:
+        #     for num in numbers:
+        #         cards.append(Card(color=col, number=num))
+        cards = [Card(number=num) for num in numbers]
         return cards
 
     def score(self):
         """Штрафные очки за карту."""
         return self.number
-
-
