@@ -14,8 +14,8 @@ class Hand:
 
 
     def save(self) -> str:
-        """Convert deck to string in '4 7 0' format."""
-        scards = [c.save() for c in self.cards]         # ['4', '7', '0']
+        """Convert deck to string in '3 1 6' format."""
+        scards = [c.save() for c in self.cards]         # ['3', '1', '6']
         s = ' '.join(scards)
         return s
 
@@ -30,7 +30,7 @@ class Hand:
 
     @classmethod
     def load(cls, text: str) -> typing.Self:
-        """Convert string in '4 7 0' format to Deck. Return deck."""
+        """Convert string in '3 1 6' format to Deck. Return deck."""
         cards = [Card.load(s) for s in text.split()]
         return cls(cards=cards)
 
