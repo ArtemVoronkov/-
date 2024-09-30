@@ -4,7 +4,7 @@ from typing import Self
 
 
 class Card:
-    NUMBERS = list(range(10)) + list(range(1, 10))
+    NUMBERS = list(range(7)) + list(range(1, 7))
 
     def __init__(self, number: int):
         if number not in Card.NUMBERS:

@@ -12,16 +12,16 @@ def test_save():
     assert repr(c) == '3'
     assert c.save() == '3'
 
-    c = Card(7)
-    assert repr(c) == '7'
-    assert c.save() == '7'
+    c = Card(6)
+    assert repr(c) == '6'
+    assert c.save() == '6'
 
 def test_eq():
     c1 = Card(3)
     c2 = Card(3)
     c3 = Card(1)
     c4 = Card(2)
-    c5 = Card(7)
+    c5 = Card(6)
 
     assert c1 == c2
     assert c1 != c3
@@ -60,19 +60,19 @@ def test_play_on():
     assert not c4.can_play_on(c1)
 
 def test_all_cards():
-    cards = Card.all_cards(numbers=[5, 2, 7])
+    cards = Card.all_cards(numbers=[5, 2, 6])
     # print(cards)
     expected_cards = [
         Card.load('5'),
         Card.load('2'),
-        Card.load('7'),
+        Card.load('6'),
     ]
     assert cards == expected_cards
 
 
 def test_score():
-    c = Card(7)
-    assert 7 == c.score()
+    c = Card(6)
+    assert 6 == c.score()
 
     c = Card(5)
     assert 5 == c.score()
