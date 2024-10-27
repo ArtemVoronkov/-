@@ -2,9 +2,11 @@
 from typing import Self
 
 
-
+# Lama = 10
 class Card:
-    NUMBERS = list(range(7)) + list(range(1, 7))
+    Lama = 10
+    NUMBERS = list(range(1, 7)) + [10]
+
 
     def __init__(self, number: int):
         if number not in Card.NUMBERS:
@@ -27,20 +29,25 @@ class Card:
     @staticmethod
     def load(text: str):
         """From '3' to Card(3)."""
-        return Card(number=int(text[0]))
+        return Card(number=int(text[:2]))
 
+    """Можно ли играть карту self на карту other."""
     def can_play_on(self, other: Self) -> bool:
-        """Можно ли играть карту self на карту other."""
-        return self.number == other.number or self.number == other.number+1
+        #Метод возвращает логическое значение, указывающее, можно ли сыграть текущую карту (self) на другую карту (other).
+
+        if self.number == other.number or self.number == other.number + 1:
+            return True
+        if self.number == Card.Lama:
+            return other.number == 6 or other.number == Card.Lama
+        if other.number == Card.Lama:
+            return self.number == 1 or self.number == Card.Lama
+        return False
+
 
     @staticmethod
     def all_cards(numbers: None | list[int] = None):
         if numbers is None:
             numbers = Card.NUMBERS
-        # cards = []
-        # for col in colors:
-        #     for num in numbers:
-        #         cards.append(Card(color=col, number=num))
         cards = [Card(number=num) for num in numbers]
         return cards
 
