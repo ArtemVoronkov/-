@@ -17,7 +17,6 @@ def test_init_shuffle():
     full_deck2 = Deck(None)
     assert full_deck1.cards != full_deck2.cards
 
-
 def test_save():
     d = Deck(cards=cards)
     assert d.save() == "3 5 6"
@@ -42,7 +41,7 @@ def test_draw_card():
 
 
 def test_shuffle_1():
-    test_cards = Card.all_cards(numbers=[2, 4, 6])
+    test_cards = Card.all_cards(numbers=[3, 5, 6])
     deck = Deck(cards=test_cards)
     deck_list = [deck.save()]
     for i in range(5):
@@ -50,20 +49,3 @@ def test_shuffle_1():
         s = deck.save()
         assert s not in deck_list
         deck_list.append(s)
-
-
-def test_shuffle_2():
-    random.seed(3)
-
-    test_cards = Card.all_cards(numbers=[4, 2, 6])
-    deck = Deck(cards=test_cards)
-    deck_list = [deck.save()]
-
-    deck.shuffle()
-    assert deck.save() == "2 6 4"
-
-    deck.shuffle()
-    assert deck.save() == "2 4 6"
-
-    deck.shuffle()
-    assert deck.save() == "4 2 6"

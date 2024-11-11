@@ -48,7 +48,7 @@ class Card:
     def all_cards(numbers: None | list[int] = None):
         if numbers is None:
             numbers = Card.NUMBERS
-        cards = [Card(number=num) for num in numbers]
+        cards = [Card(number=num) for num in numbers]*8
         return cards
 
     def score(self):
