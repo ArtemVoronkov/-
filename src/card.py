@@ -6,6 +6,8 @@ from typing import Self
 class Card:
     Lama = 10
     NUMBERS = list(range(1, 7)) + [10]
+    count_cards_of_one_type = 8
+    count_of_types = 7
 
 
     def __init__(self, number: int):
@@ -48,8 +50,13 @@ class Card:
     def all_cards(numbers: None | list[int] = None):
         if numbers is None:
             numbers = Card.NUMBERS
-        cards = [Card(number=num) for num in numbers]*8
+        cards = [
+            Card(number=num)
+            for _ in range(Card.count_cards_of_one_type)
+            for num in numbers
+        ]
         return cards
+
 
     def score(self):
         """Штрафные очки за карту."""

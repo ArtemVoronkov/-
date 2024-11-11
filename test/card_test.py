@@ -70,15 +70,20 @@ def test_play_on():
     assert not c4.can_play_on(c5)
 
 def test_all_cards():
-    cards = Card.all_cards(numbers=[5, 2, 6, 10])
+    cards = Card.all_cards(numbers=[3, 5, 6, 10])
     # print(cards)
-    expected_cards = [
-        Card.load('5'),
-        Card.load('2'),
-        Card.load('6'),
-        Card.load('10'),
+    cnt_of_one_type = Card.count_cards_of_one_type
+    expected_cards = cnt_of_one_type * [
+        Card.load("3"),
+        Card.load("5"),
+        Card.load("6"),
+        Card.load("10",)
     ]
     assert cards == expected_cards
+
+    cnt_of_types = Card.count_of_types
+    cards = Card.all_cards()
+    assert len(cards) == cnt_of_one_type * cnt_of_types
 
 
 def test_score():
