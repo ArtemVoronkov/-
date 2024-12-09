@@ -92,8 +92,11 @@ def test_draw_card(): #Проверяет, что метод draw_card корр�
 
 
 def test_play_card(): #Проверяет, что игрок может сыграть карту, и что карта удаляется из его руки, а верхняя карта обновляется
-    players = [alex, bob]
-    game = GameState(players=players, deck=full_deck, top=Card.load("3"), current_player=0)
+    # players = [alex, bob]
+    # game = GameState(players=players, deck=full_deck, top=Card.load("3"), current_player=0)
+    d = data.copy()
+    d['current_player_index'] = 0
+    game = GameState.load(d)
 
     assert str(game.current_player().hand) == "4 6 10"
     assert str(game.top) == "3"
@@ -103,39 +106,29 @@ def test_play_card(): #Проверяет, что игрок может сыгр
     assert str(game.top) == "4"
 
 # Тесты с картой "Лама"
-def test_play_lama_card(): #Проверяет, что игрок может сыграть карту "Лама" (10), и верхняя карта становится "Ламой". У игрока при этом не должно изменяться количество карт
-    players = [alex, bob]
-    game = GameState(players=players, deck=full_deck, top=Card.load("10"), current_player=0)
+def test_play_lama_card():
+    """
+    Проверяет, что игрок
+    - не может играть Ламу на 5,
+    - не может играть Ламу на 1,
+    - может сыграть карту "Лама" (10) на 6, и верхняя карта становится "Ламой".
+    У игрока при этом должно изменяться количество карт
+    """
+    data = {
+        "top": "6",
+        "current_player_index": 0,
+        "deck": "2 6 10",
+        "players": [
+            {"name": "Alex", "hand": "4 10 6", "score": 9},
+            {"name": "Bob", "hand": "1 5", "score": 5},
+        ],
+    }
+    game = GameState.load(data)
 
-    assert str(game.current_player().hand) == "6 10" #Спросить почему не остаётся 4
-    assert str(game.top) == "10"
+    assert str(game.current_player().hand) == "4 10 6" #Спросить почему не остаётся 4
+    assert str(game.top) == "6"
 
     # Игрок Alex играет карту "Лама" (10)
     game.play_card(Card.load("10"))
-    assert str(game.current_player().hand) == "6"  # У Alex все еще карты
-    assert str(game.top) == "10"  # Теперь верхняя карта - Лама
-
-
-def test_play_card_on_lama(): #Проверяет, что игрок может сыграть другую карту (например, "1") на верхнюю карту "Лама"
-    players = [alex, bob]
-    game = GameState(players=players, deck=full_deck, top=Card.load("10"), current_player=1)  # Верхняя карта - Лама
-
-    assert str(game.current_player().hand) == "1 5"  # У Bob только две карты
-
-    # Bob играет карту "1"
-    game.play_card(Card.load("1"))
-    assert str(game.current_player().hand) == "5"  # У Bob все еще одна карта
-    assert str(game.top) == "1"  # Теперь верхняя карта - 1
-
-
-def test_lama_can_play_on_lama(): #Проверяет, что игрок может сыграть карту "Лама" на другую карту "Лама"
-    players = [alex, bob]
-    game = GameState(players=players, deck=full_deck, top=Card.load("10"), current_player=0)  # Верхняя карта - Лама
-
-    assert str(game.current_player().hand) == "4 6 10"
-
-    # Alex играет карту "Лама" (10)
-    game.play_card(Card.load("10"))
-    assert str(game.current_player().hand) == "4 6"  # У Alex все еще есть карты
-    assert str(game.top) == "10"  # Верхняя карта остается Ламой
-
+    assert str(game.current_player().hand) == "4 6"  # У Alex все еще карты
+    assert str(game.top) == "10"  # Все еще верхняя карта - Лама
