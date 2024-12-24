@@ -39,9 +39,12 @@ class Hand:
 
     def score(self):
         """Штрафные очки"""
+        unique_card_numbers = set()  # Множество для хранения уникальных номеров карт
         res = 0
         for c in self.cards:
-            res += c.score()
+            if c.number not in unique_card_numbers:  # Если номер карты еще не встречался
+                res += c.score()  # Добавляем штрафные очки
+                unique_card_numbers.add(c.number)  # Добавляем номер карты в множество
         return res
 
     def playable_cards(self, top_card: Card) -> [Card]:

@@ -72,12 +72,12 @@ class GameServer:
 
     @classmethod
     def new_game(cls, player_types: dict):
-        # Shuffle the deck and deal the top card
+        # Перетасуйте колоду и выставите верхнюю карту
         deck = Deck(cards=None)
         top = deck.draw_card()
         game_state = GameState(list(player_types.keys()), deck, top)
 
-        # Each player starts with 6 cards
+        # Каждый игрок начинает с 6 картами
         for _ in range(cls.INITIAL_HAND_SIZE):
             for p in player_types.keys():
                 p.hand.add_card(deck.draw_card())
@@ -109,18 +109,51 @@ class GameServer:
 
         self.assign_penalty_points()  # Начисляем штрафные очки по результатам раунда
 
+    def run_round(self):
+        current_phase = GamePhase.CHOOSE_CARD
+        penalty_assigned = False  # Флаг, чтобы убедиться, что штрафные очки начислены только один раз
+
+        while current_phase != GamePhase.GAME_END:
+            try:
+                phases = {
+                    GamePhase.CHOOSE_CARD: self.choose_card_phase,
+                    GamePhase.DRAW_EXTRA: self.draw_extra_phase,
+                    GamePhase.NEXT_PLAYER: self.next_player_phase,
+                    GamePhase.DECLARE_WINNER: self.declare_winner_phase,
+                }
+                current_phase = phases[current_phase]()
+            except IndexError:  # Если колода пуста
+                if not penalty_assigned:  # Если штрафные очки еще не начислены
+                    self.assign_penalty_points_for_all()  # Начисляем штрафные очки
+                    penalty_assigned = True  # Устанавливаем флаг
+                return  # Завершаем раунд
+
+        if not penalty_assigned:  # Если штрафные очки еще не начислены
+            self.assign_penalty_points()  # Начисляем штрафные очки по результатам раунда
+
     def assign_penalty_points(self):
         for player in self.game_state.players:
             if player.hand.cards:  # Если у игрока остались карты, начисляем штрафные очки
-                penalty = sum(card.score() for card in player.hand.cards)  # Сумма значений карт в руке
+                unique_card_numbers = set()  # Множество для хранения уникальных номеров карт
+                penalty = 0
+                for card in player.hand.cards:
+                    if card.number not in unique_card_numbers:  # Если номер карты еще не встречался
+                        penalty += card.score()  # Добавляем штрафные очки
+                        unique_card_numbers.add(card.number)  # Добавляем номер карты в множество
                 self.penalty_points[player] += penalty
                 print(f"Игрок {player.name} получает {penalty} штрафных очков. Всего: {self.penalty_points[player]}")
 
     def assign_penalty_points_for_all(self):
         for player in self.game_state.players:
-            penalty = sum(card.score() for card in player.hand.cards)  # Сумма значений карт в руке
+            unique_card_numbers = set()  # Множество для хранения уникальных номеров карт
+            penalty = 0
+            for card in player.hand.cards:
+                if card.number not in unique_card_numbers:  # Если номер карты еще не встречался
+                    penalty += card.score()  # Добавляем штрафные очки
+                    unique_card_numbers.add(card.number)  # Добавляем номер карты в множество
             self.penalty_points[player] += penalty
-            print(f"Игрок {player.name} получает {penalty} штрафных очков из-за пустой колоды. Всего: {self.penalty_points[player]}")
+            print(
+                f"Игрок {player.name} получает {penalty} штрафных очков из-за пустой колоды. Всего: {self.penalty_points[player]}")
 
     def check_game_over(self):
         for player, points in self.penalty_points.items():

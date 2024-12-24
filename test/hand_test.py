@@ -25,7 +25,7 @@ def test_score():
     h = Hand.load('3 1 6')
     assert h.score() == 10
 
-    h = Hand.load('5 4')
+    h = Hand.load('5 4 4')
     assert h.score() == 9
 
 def test_add_card():

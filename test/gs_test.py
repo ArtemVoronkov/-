@@ -5,10 +5,10 @@ from src.card import Card
 from src.game_state import GameState
 
 data = {
-    "top": "3",
-    "current_player_index": 1,
-    "deck": "2 6 10",
-    "players": [
+    "Верхушка колоды": "3",
+    "Номер игрока": 1,
+    "Колода": "2 6 10",
+    "Игроки": [
         {"name": "Alex", "hand": "4 6 10", "score": 9},
         {"name": "Bob", "hand": "1 5", "score": 5},
     ],
@@ -56,10 +56,10 @@ def test_save(): #Проверяет, что метод сохранения с�
     game = GameState(players=players, deck=full_deck, top=Card.load("3"), current_player=1)
 
     expected_save = {
-        "top": str(Card.load("3")),
-        "deck": str(full_deck),
-        "current_player_index": 1,
-        "players": [p.save() for p in players],
+        "Верхушка колоды": str(Card.load("3")),
+        "Колода": str(full_deck),
+        "Номер игрока": 1,
+        "Игроки": [p.save() for p in players],
     }
 
     assert game.save() == expected_save
