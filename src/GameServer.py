@@ -24,28 +24,30 @@ class GamePhase(enum.StrEnum):
 
 class GameServer:
     INITIAL_HAND_SIZE = 6
+    PENALTY_THRESHOLD = 40  # Порог штрафных очков для завершения игры
 
     def __init__(self, player_types, game_state):
         self.game_state: GameState = game_state
         self.player_types: dict = player_types  # {player: PlayerInteractions}
+        self.penalty_points = {player: 0 for player in player_types.keys()}  # Инициализация штрафных очков
 
     @classmethod
     def load_game(cls):
         # TODO: выбрать имя файла
-        filename = 'uno.json'
+        filename = 'lama.json'
         with open(filename, 'r') as fin:
             data = json.load(fin)
             game_state = GameState.load(data)
             print(game_state.save())
             player_types = {}
             for player, player_data in zip(game_state.players, data['players']):
-                kind = player_data['kind']
+                kind = player_data['Тип']
                 kind = getattr(all_player_types, kind)
                 player_types[player] = kind
             return GameServer(player_types=player_types, game_state=game_state)
 
     def save(self):
-        filename = 'uno.json'
+        filename = 'lama.json'
         data = self.save_to_dict()
         with open(filename, 'w') as fout:
             json.dump(data, fout, indent=4)
@@ -54,7 +56,7 @@ class GameServer:
         data = self.game_state.save()
         for player_index, player in enumerate(self.player_types.keys()):
             player_interaction = self.player_types[player]
-            data['players'][player_index]['kind'] = self.player_types[player].__name__
+            data['Игрок'][player_index]['Тип'] = self.player_types[player].__name__
         return data
 
     @classmethod
@@ -86,18 +88,17 @@ class GameServer:
         return res
 
     def run(self):
+        while True:
+            self.run_round()  # Запускаем раунд
+            if self.check_game_over():  # Проверяем, не достиг ли кто-то порога штрафных очков
+                break
+            self.reset_for_new_round()  # Сбрасываем состояние для нового раунда
+
+        self.declare_final_results()  # Объявляем итоговые результаты
+
+    def run_round(self):
         current_phase = GamePhase.CHOOSE_CARD
         while current_phase != GamePhase.GAME_END:
-            # 1. Possible code, but with more copy-paste
-            # match current_phase:
-            #     case CHOOSE_CARD:
-            #         current_phase = choose_card_phase()
-            #     case DRAW_EXTRA:
-            #         current_phase = draw_extra_phase()
-            #     case GAME_END:
-            #         current_phase = game_end_phase()
-
-            # 2. Suggested code - minimal and still easy to read
             phases = {
                 GamePhase.CHOOSE_CARD: self.choose_card_phase,
                 GamePhase.DRAW_EXTRA: self.draw_extra_phase,
@@ -106,26 +107,60 @@ class GameServer:
             }
             current_phase = phases[current_phase]()
 
-            # 3. Can use naming convection to not declare phases explicitly,
-            # but this may introduce errors later.
-            # Looks over-engineered and is hard to read w/o comments.
-            # current_phase = getattr(self, current_phase.name.lower() + "_phase")()
+        self.assign_penalty_points()  # Начисляем штрафные очки по результатам раунда
+
+    def assign_penalty_points(self):
+        for player in self.game_state.players:
+            if player.hand.cards:  # Если у игрока остались карты, начисляем штрафные очки
+                penalty = sum(card.score() for card in player.hand.cards)  # Сумма значений карт в руке
+                self.penalty_points[player] += penalty
+                print(f"Игрок {player.name} получает {penalty} штрафных очков. Всего: {self.penalty_points[player]}")
+
+    def assign_penalty_points_for_all(self):
+        for player in self.game_state.players:
+            penalty = sum(card.score() for card in player.hand.cards)  # Сумма значений карт в руке
+            self.penalty_points[player] += penalty
+            print(f"Игрок {player.name} получает {penalty} штрафных очков из-за пустой колоды. Всего: {self.penalty_points[player]}")
+
+    def check_game_over(self):
+        for player, points in self.penalty_points.items():
+            if points >= self.PENALTY_THRESHOLD:
+                print(f"Игрок {player.name} набрал {points} штрафных очков и проиграл игру!")
+                return True
+        return False
+
+    def reset_for_new_round(self):
+        # Сбрасываем состояние игры для нового раунда
+        self.game_state.deck = Deck(cards=None)
+        self.game_state.top = self.game_state.deck.draw_card()
+        for player in self.game_state.players:
+            player.hand = Hand()  # Очищаем руки игроков
+        for _ in range(self.INITIAL_HAND_SIZE):
+            for player in self.game_state.players:
+                player.hand.add_card(self.game_state.deck.draw_card())
 
     def declare_winner_phase(self) -> GamePhase:
-        print(f"{self.game_state.current_player()} is the winner!")
+        print(f"{self.game_state.current_player()} завершил раунд!")
         return GamePhase.GAME_END
 
     def next_player_phase(self) -> GamePhase:
         if not self.game_state.current_player().hand.cards:
             return GamePhase.DECLARE_WINNER
         self.game_state.next_player()
-        print(f"=== {self.game_state.current_player()}'s turn")
+        print(f"=== Ходит {self.game_state.current_player()} === ")
         return GamePhase.CHOOSE_CARD
 
     def draw_extra_phase(self) -> GamePhase:
         current_player = self.game_state.current_player()
+
+        # Проверяем, пуста ли колода
+        if not self.game_state.deck.cards:
+            print("Колода пуста, нельзя взять карту.")
+            self.assign_penalty_points_for_all()
+            return GamePhase.GAME_END
+
         card = self.game_state.draw_card()
-        print(f"Player {current_player} draws {card}")
+        print(f"Игрок {current_player} вытягивает {card}")
         self.inform_all("inform_card_drawn", current_player)
 
         if card.can_play_on(self.game_state.top):
@@ -133,7 +168,7 @@ class GameServer:
             if self.player_types[current_player].choose_to_play(
                 self.game_state.top, card
             ):
-                print(f"Играк {current_player.name} играет {card}")
+                print(f"Игрок {current_player.name} играет {card}")
                 current_player.hand.remove_card(card)
                 self.game_state.top = card
                 self.inform_all("inform_card_played", current_player, card)
@@ -208,8 +243,17 @@ class GameServer:
                 kind = getattr(all_player_types, kind)
                 break
             except AttributeError:
-                print(f"Allowed player types are: {player_types_as_str}")
+                print(f"Возможные типы игроков: {player_types_as_str}")
         return name, kind
+
+    def declare_final_results(self):
+        print("\nИтоговые результаты:")
+        for player, points in self.penalty_points.items():
+            print(f"Игрок {player.name}: {points} штрафных очков")
+
+        # Определяем победителя
+        winner = min(self.penalty_points, key=self.penalty_points.get)
+        print(f"Победитель: {winner.name} с наименьшим количеством штрафных очков!")
 
 
 def __main__():
