@@ -1,0 +1,19 @@
+{
+  "top": "2",
+  "deck": "3 5 6 10 2 3 ",
+  "current_player_index": 0,
+  "players": [
+    {
+      "name": "Alex",
+      "hand": "3 5 4 1 10",
+      "kind": "Bot",
+      "score": 35
+    },
+    {
+      "name": "Bob",
+      "hand": "4",
+      "kind": "Bot",
+      "score": 0
+    }
+  ]
+}

@@ -31,19 +31,22 @@ class GameServer:
         self.player_types: dict = player_types  # {player: PlayerInteractions}
         self.penalty_points = {player: 0 for player in player_types.keys()}  # Инициализация штрафных очков
 
+
     @classmethod
     def load_game(cls):
         # TODO: выбрать имя файла
-        filename = 'lama.json'
+        filename = 'lama3415.json'
         with open(filename, 'r') as fin:
             data = json.load(fin)
             game_state = GameState.load(data)
-            print(game_state.save())
+            print(game_state)
+            print('gamestate', game_state.save())
             player_types = {}
             for player, player_data in zip(game_state.players, data['players']):
-                kind = player_data['Тип']
+                kind = player_data['kind']
                 kind = getattr(all_player_types, kind)
                 player_types[player] = kind
+
             return GameServer(player_types=player_types, game_state=game_state)
 
     def save(self):
@@ -56,7 +59,7 @@ class GameServer:
         data = self.game_state.save()
         for player_index, player in enumerate(self.player_types.keys()):
             player_interaction = self.player_types[player]
-            data['Игрок'][player_index]['Тип'] = self.player_types[player].__name__
+            data['players'][player_index]['kind'] = self.player_types[player].__name__
         return data
 
     @classmethod
@@ -140,8 +143,8 @@ class GameServer:
                     if card.number not in unique_card_numbers:  # Если номер карты еще не встречался
                         penalty += card.score()  # Добавляем штрафные очки
                         unique_card_numbers.add(card.number)  # Добавляем номер карты в множество
-                self.penalty_points[player] += penalty
-                print(f"Игрок {player.name} получает {penalty} штрафных очков. Всего: {self.penalty_points[player]}")
+                player.score += penalty
+                print(f"Игрок {player.name} получает {penalty} штрафных очков. Всего: {player.score}")
 
     def assign_penalty_points_for_all(self):
         for player in self.game_state.players:
@@ -151,13 +154,13 @@ class GameServer:
                 if card.number not in unique_card_numbers:  # Если номер карты еще не встречался
                     penalty += card.score()  # Добавляем штрафные очки
                     unique_card_numbers.add(card.number)  # Добавляем номер карты в множество
-            self.penalty_points[player] += penalty
-            print(
-                f"Игрок {player.name} получает {penalty} штрафных очков из-за пустой колоды. Всего: {self.penalty_points[player]}")
+            player.score += penalty
+            print(f"Игрок {player.name} получает {penalty} штрафных очков из-за пустой колоды. Всего: {player.score}")
 
     def check_game_over(self):
-        for player, points in self.penalty_points.items():
-            if points >= self.PENALTY_THRESHOLD:
+        for player in self.game_state.players:
+            points = player.score
+            if points >= 40:
                 print(f"Игрок {player.name} набрал {points} штрафных очков и проиграл игру!")
                 return True
         return False
@@ -281,8 +284,8 @@ class GameServer:
 
     def declare_final_results(self):
         print("\nИтоговые результаты:")
-        for player, points in self.penalty_points.items():
-            print(f"Игрок {player.name}: {points} штрафных очков")
+        for player in self.player_types:
+            print(f"Игрок {player.name}: {player.score} штрафных очков")
 
         # Определяем победителя
         winner = min(self.penalty_points, key=self.penalty_points.get)
@@ -290,7 +293,7 @@ class GameServer:
 
 
 def __main__():
-    load_from_file = False
+    load_from_file = True
     if load_from_file:
         server = GameServer.load_game()
         server.save()
@@ -300,4 +303,7 @@ def __main__():
 
 
 if __name__ == "__main__":
+    import random
+
+    random.seed(7)
     __main__()
